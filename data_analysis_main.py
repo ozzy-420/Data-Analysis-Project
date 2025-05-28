@@ -1,9 +1,8 @@
 import os
 import matplotlib
-import pandas as pd
-from data_loader import load_data
-from statistics_computations import compute_statistics, save_statistics
-from visualisations_generator import (
+from stage1_data_analysis.data_loader import load_data
+from stage1_data_analysis.statistics_computations import compute_statistics, save_statistics
+from stage1_data_analysis.visualisations_generator import (
     create_boxplot, create_violinplot, create_histogram, create_regression_plot, create_heatmap
 )
 import threading

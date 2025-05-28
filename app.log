@@ -1,0 +1,26 @@
+2025-05-28 16:10:19,894 - INFO - Starting Stage 2: Machine Learning Models
+2025-05-28 16:10:19,896 - INFO - Step 1: Preparing data...
+2025-05-28 16:10:19,973 - INFO - Starting data preparation for machine learning.
+2025-05-28 16:10:19,974 - INFO - Applying custom mappings to categorical columns.
+2025-05-28 16:10:20,051 - INFO - Numerical features: ['LIMIT_BAL', 'AGE', 'BILL_AMT1', 'BILL_AMT2', 'BILL_AMT3', 'BILL_AMT4', 'BILL_AMT5', 'BILL_AMT6', 'PAY_AMT1', 'PAY_AMT2', 'PAY_AMT3', 'PAY_AMT4', 'PAY_AMT5', 'PAY_AMT6']
+2025-05-28 16:10:20,051 - INFO - Categorical features: ['SEX', 'EDUCATION', 'MARRIAGE', 'PAY_0', 'PAY_2', 'PAY_3', 'PAY_4', 'PAY_5', 'PAY_6']
+2025-05-28 16:10:20,052 - INFO - Creating preprocessing pipeline for numerical and categorical features.
+2025-05-28 16:10:20,052 - INFO - Step 2: Training and evaluating Scikit-learn models (Evaluation 3.0)
+2025-05-28 16:10:20,052 - INFO - Creating pipelines for Sklearn models.
+2025-05-28 16:10:20,053 - INFO - Training model: Logistic Regression
+2025-05-28 16:10:20,553 - INFO - Training model: Decision Tree
+2025-05-28 16:10:21,363 - INFO - Training model: SVC
+2025-05-28 16:13:18,783 - INFO - Step 3: NumPy Implementations (Evaluation 4.0)
+2025-05-28 16:13:18,862 - WARNING - NOTE: NumPy Linear Regression (Closed Form) requires specific data preparation (different target).
+2025-05-28 16:13:18,862 - INFO - Running NumPy Logistic Regression (Gradient Descent)...
+2025-05-28 16:13:28,669 - INFO - Logistic Regression (train) - Accuracy: 0.8228, F1: 0.4806, ROC_AUC: 0.7760
+2025-05-28 16:13:28,682 - INFO - Logistic Regression (val) - Accuracy: 0.8198, F1: 0.4619, ROC_AUC: 0.7640
+2025-05-28 16:13:28,693 - INFO - Logistic Regression (test) - Accuracy: 0.8170, F1: 0.4628, ROC_AUC: 0.7577
+2025-05-28 16:13:28,694 - INFO - Step 4: PyTorch Implementation (Evaluation 5.5)
+2025-05-28 16:13:28,694 - INFO - --- PyTorch Logistic Regression ---
+2025-05-28 16:13:28,703 - INFO - Training on CPU...
+2025-05-28 16:13:48,388 - INFO - CPU Training time: 17.88 seconds
+2025-05-28 16:13:48,894 - INFO - PyTorch CPU - Test Accuracy: 0.8162, F1: 0.4548, ROC_AUC: 0.7596
+2025-05-28 16:13:48,894 - WARNING - GPU not available. Skipping GPU training.
+2025-05-28 16:13:48,896 - INFO - Final evaluation results:
+2025-05-28 16:13:48,906 - INFO - Total process duration: 0:03:29.011817
