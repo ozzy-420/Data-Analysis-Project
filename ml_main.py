@@ -1,21 +1,26 @@
+import logging
+from datetime import datetime
+import pandas as pd
 from stage1_data_analysis.data_loader import load_data
 from stage2_ml_parts.data_preparation import prepare_data_for_ml, MAPPING_DICT
 from stage2_ml_parts.build_pipelines import create_preprocessor, get_sklearn_models_with_pipelines
 from stage2_ml_parts.train_eval_sklearn import train_and_evaluate_sklearn_model
-from stage2_ml_parts.numpy_implementations import (
-    run_numpy_logistic_regression_gd
-)
+from stage2_ml_parts.numpy_implementations import run_numpy_logistic_regression_gd
 from stage2_ml_parts.pytorch_implementations import run_pytorch_logistic_regression
 from stage2_ml_parts.reporting import initialize_results_df, add_results_to_df, display_results
+from stage2_ml_parts.visualizations import (
+    plot_model_comparison_metrics,
+    plot_training_times,
+    plot_numpy_cost_history,
+    plot_pytorch_train_val_curves
+)
 
-import logging
-from datetime import datetime
-
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Default paths and parameters
 DEFAULT_DATA_SOURCE = "data/UCI_Credit_Card.csv"
 TARGET_COLUMN = 'default.payment.next.month'
-logger = logging.getLogger(__name__)
 
 
 def main():
@@ -23,6 +28,11 @@ def main():
 
     # Initialize results DataFrame
     results_df = initialize_results_df()
+    cost_history_numpy_log_reg = None
+    history_pytorch_cpu = None
+    history_pytorch_gpu = None
+    time_cpu_pytorch = float('nan')
+    time_gpu_pytorch = float('nan')
 
     # --- Data Preparation ---
     logger.info("Step 1: Preparing data...")
@@ -33,14 +43,13 @@ def main():
     X_train, X_val, X_test, y_train, y_val, y_test, numerical_features, categorical_features = \
         prepare_data_for_ml(raw_data, TARGET_COLUMN, MAPPING_DICT)
 
-    logger.debug(
-        f"Data prepared. Dataset sizes: Training X: {X_train.shape}, Validation X: {X_val.shape}, Test X: {X_test.shape}")
+    logger.debug(f"Data prepared. Dataset sizes: Training X: {X_train.shape}, Validation X: {X_val.shape}, Test X: {X_test.shape}")
 
     # --- Create Preprocessor ---
     preprocessor = create_preprocessor(numerical_features, categorical_features)
 
     # --- Stage 3.0: Scikit-learn Models ---
-    logger.info("Step 2: Training and evaluating Scikit-learn models (Evaluation 3.0)")
+    logger.info("Step 2: Training and evaluating Scikit-learn models")
     sklearn_models_with_pipelines = get_sklearn_models_with_pipelines(preprocessor)
 
     for model_name, pipeline in sklearn_models_with_pipelines.items():
@@ -51,56 +60,94 @@ def main():
         results_df = add_results_to_df(results_df, model_name, metrics_train, metrics_val, metrics_test)
 
     # --- Stage 4.0: NumPy Implementations ---
-    logger.info("Step 3: NumPy Implementations (Evaluation 4.0)")
+    logger.info("Step 3: NumPy Implementations")
 
-    # 4.0a: Linear Regression (Closed Form)
-    logger.debug("Running NumPy implementation: Linear Regression (Closed Form)")
-    X_train_processed_for_numpy = preprocessor.transform(X_train)
-    X_val_processed_for_numpy = preprocessor.transform(X_val)
-    X_test_processed_for_numpy = preprocessor.transform(X_test)
-
-    logger.warning(
-        "NOTE: NumPy Linear Regression (Closed Form) requires specific data preparation (different target).")
-
-    # 4.0b: Logistic Regression (Gradient Descent)
+    # Logistic Regression (Gradient Descent)
     logger.debug("Running NumPy implementation: Logistic Regression (Gradient Descent)")
-    metrics_numpy_log_reg = run_numpy_logistic_regression_gd(
-        X_train_processed_for_numpy, y_train.values,
-        X_val_processed_for_numpy, y_val.values,
-        X_test_processed_for_numpy, y_test.values,
-        num_features=X_train_processed_for_numpy.shape[1]
+    X_train_processed = preprocessor.transform(X_train)
+    X_val_processed = preprocessor.transform(X_val)
+    X_test_processed = preprocessor.transform(X_test)
+
+    numpy_log_reg_output = run_numpy_logistic_regression_gd(
+        X_train_processed, y_train.values,
+        X_val_processed, y_val.values,
+        X_test_processed, y_test.values,
     )
-    if metrics_numpy_log_reg:
+    if numpy_log_reg_output:
+        metrics_numpy_log_reg, cost_history_numpy_log_reg = numpy_log_reg_output
         results_df = add_results_to_df(results_df, "NumPy Logistic Regression (GD)",
                                        metrics_numpy_log_reg['train'],
                                        metrics_numpy_log_reg['val'],
                                        metrics_numpy_log_reg['test'])
 
     # --- Stage 5.5: PyTorch Implementation ---
-    logger.info("Step 4: PyTorch Implementation (Evaluation 5.5)")
-    logger.debug("Running PyTorch implementation: Logistic Regression")
-    metrics_pytorch_log_reg_cpu, metrics_pytorch_log_reg_gpu, time_cpu, time_gpu = run_pytorch_logistic_regression(
-        X_train_processed_for_numpy, y_train.values,
-        X_val_processed_for_numpy, y_val.values,
-        X_test_processed_for_numpy, y_test.values,
-        input_dim=X_train_processed_for_numpy.shape[1]
+    logger.info("Step 4: PyTorch Implementation")
+    pytorch_output = run_pytorch_logistic_regression(
+        X_train_processed, y_train.values,
+        X_val_processed, y_val.values,
+        X_test_processed, y_test.values,
+        input_dim=X_train_processed.shape[1]
     )
+    metrics_pytorch_log_reg_cpu, metrics_pytorch_log_reg_gpu, \
+        time_cpu_pytorch, time_gpu_pytorch, \
+        history_pytorch_cpu, history_pytorch_gpu = pytorch_output
+
     if metrics_pytorch_log_reg_cpu:
         results_df = add_results_to_df(results_df, "PyTorch Logistic Regression (CPU)",
                                        metrics_pytorch_log_reg_cpu['train'],
                                        metrics_pytorch_log_reg_cpu['val'],
                                        metrics_pytorch_log_reg_cpu['test'],
-                                       notes=f"Train time: {time_cpu:.2f}s")
+                                       notes=f"Train time: {time_cpu_pytorch:.2f}s")
     if metrics_pytorch_log_reg_gpu:
         results_df = add_results_to_df(results_df, "PyTorch Logistic Regression (GPU)",
                                        metrics_pytorch_log_reg_gpu['train'],
                                        metrics_pytorch_log_reg_gpu['val'],
                                        metrics_pytorch_log_reg_gpu['test'],
-                                       notes=f"Train time: {time_gpu:.2f}s (GPU availability might vary)")
+                                       notes=f"Train time: {time_gpu_pytorch:.2f}s")
 
     # --- Display Results ---
     logger.info("Final evaluation results:")
     display_results(results_df)
+
+    # --- Generate Visualizations ---
+    logger.info("Generating report visualizations...")
+    try:
+        if not results_df.empty:
+            plot_model_comparison_metrics(results_df, metric_key='Test Acc/MSE',
+                                          title='Model Comparison (Test Accuracy/MSE)',
+                                          filename='output/stage2/model_comparison_test_acc_mse.png')
+            plot_model_comparison_metrics(results_df, metric_key='Test F1/R2',
+                                          title='Model Comparison (Test F1/R2)',
+                                          filename='output/stage2/model_comparison_test_f1_r2.png')
+            if 'Test ROC_AUC' in results_df.columns and results_df['Test ROC_AUC'].notna().any():
+                plot_model_comparison_metrics(results_df, metric_key='Test ROC_AUC',
+                                              title='Model Comparison (Test ROC AUC)',
+                                              filename='output/stage2/model_comparison_test_roc_auc.png')
+
+        pytorch_times_for_plot = {}
+        if "PyTorch Logistic Regression (CPU)" in results_df["Model"].values and not pd.isna(time_cpu_pytorch):
+            pytorch_times_for_plot["PyTorch CPU"] = time_cpu_pytorch
+        if "PyTorch Logistic Regression (GPU)" in results_df["Model"].values and not pd.isna(time_gpu_pytorch):
+            pytorch_times_for_plot["PyTorch GPU"] = time_gpu_pytorch
+
+        if pytorch_times_for_plot:
+            plot_training_times(pytorch_times_for_plot, title="PyTorch Logistic Regression Training Times",
+                                filename="output/stage2/pytorch_training_times.png")
+
+        if cost_history_numpy_log_reg:
+            plot_numpy_cost_history(cost_history_numpy_log_reg, title="NumPy Logistic Regression (GD) - Cost History",
+                                    filename="output/stage2/numpy_lr_gd_cost_history.png")
+
+        if history_pytorch_cpu:
+            plot_pytorch_train_val_curves(history_pytorch_cpu, model_name_suffix=" (CPU)",
+                                          filename_prefix="pytorch_lr_cpu")
+        if history_pytorch_gpu:
+            plot_pytorch_train_val_curves(history_pytorch_gpu, model_name_suffix=" (GPU)",
+                                          filename_prefix="pytorch_lr_gpu")
+
+        logger.info("Visualizations saved successfully.")
+    except Exception as e:
+        logger.error(f"Error generating visualizations: {e}")
 
 
 if __name__ == "__main__":

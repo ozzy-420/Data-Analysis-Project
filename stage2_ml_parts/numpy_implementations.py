@@ -7,8 +7,7 @@ from sklearn.metrics import (accuracy_score, f1_score, precision_score, recall_s
 logger = logging.getLogger(__name__)
 
 
-# Helper function to add bias term
-def add_bias_term(X):
+def add_bias_term(X: np.ndarray) -> np.ndarray:
     """
     Adds a bias term (column of ones) to the feature matrix.
 
@@ -21,12 +20,14 @@ def add_bias_term(X):
     return np.concatenate([np.ones((X.shape[0], 1)), X], axis=1)
 
 
-# --- Linear Regression (Closed Form) Implementation ---
 class NumpyLinearRegressionClosedForm:
+    """
+    Linear Regression implementation using the closed-form solution.
+    """
     def __init__(self):
         self.theta = None
 
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray) -> 'NumpyLinearRegressionClosedForm':
         """
         Fits the linear regression model using the closed-form solution.
 
@@ -45,7 +46,7 @@ class NumpyLinearRegressionClosedForm:
             self.theta = np.linalg.pinv(X_b.T @ X_b) @ X_b.T @ y
         return self
 
-    def predict(self, X):
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Predicts target values using the fitted model.
 
@@ -59,7 +60,9 @@ class NumpyLinearRegressionClosedForm:
         return X_b @ self.theta
 
 
-def run_numpy_linear_regression_closed_form(X_train, y_train, X_val, y_val, X_test, y_test):
+def run_numpy_linear_regression_closed_form(X_train: np.ndarray, y_train: np.ndarray,
+                                            X_val: np.ndarray, y_val: np.ndarray,
+                                            X_test: np.ndarray, y_test: np.ndarray) -> dict:
     """
     Trains and evaluates the linear regression model using the closed-form solution.
 
@@ -76,8 +79,7 @@ def run_numpy_linear_regression_closed_form(X_train, y_train, X_val, y_val, X_te
     model.fit(X_train, y_train)
 
     results = {}
-    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val),
-                                              ("test", X_test, y_test)]:
+    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val), ("test", X_test, y_test)]:
         y_pred = model.predict(X_split)
         metrics = {
             "MSE": mean_squared_error(y_split_true, y_pred),
@@ -88,8 +90,10 @@ def run_numpy_linear_regression_closed_form(X_train, y_train, X_val, y_val, X_te
     return results
 
 
-# --- Logistic Regression (Gradient Descent) Implementation ---
 class NumpyLogisticRegressionGD:
+    """
+    Logistic Regression implementation using gradient descent.
+    """
     def __init__(self, learning_rate=0.01, n_iterations=1000, batch_size=32, tol=1e-4, verbose=False):
         self.learning_rate = learning_rate
         self.n_iterations = n_iterations
@@ -99,7 +103,7 @@ class NumpyLogisticRegressionGD:
         self.theta = None
         self.cost_history = []
 
-    def _sigmoid(self, z):
+    def _sigmoid(self, z: np.ndarray) -> np.ndarray:
         """
         Computes the sigmoid function.
 
@@ -111,7 +115,7 @@ class NumpyLogisticRegressionGD:
         """
         return 1 / (1 + np.exp(-np.clip(z, -250, 250)))
 
-    def _compute_cost(self, X, y, theta):
+    def _compute_cost(self, X: np.ndarray, y: np.ndarray, theta: np.ndarray) -> float:
         """
         Computes the logistic regression cost function.
 
@@ -125,11 +129,11 @@ class NumpyLogisticRegressionGD:
         """
         m = len(y)
         h = self._sigmoid(X @ theta)
-        epsilon = 1e-5
+        epsilon = 1e-5  # To prevent log(0)
         cost = -(1 / m) * np.sum(y * np.log(h + epsilon) + (1 - y) * np.log(1 - h + epsilon))
         return cost
 
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray) -> 'NumpyLogisticRegressionGD':
         """
         Fits the logistic regression model using gradient descent.
 
@@ -144,9 +148,9 @@ class NumpyLogisticRegressionGD:
         n_samples, n_features = X_b.shape
         self.theta = np.zeros(n_features)
         self.cost_history = []
+        prev_cost = float('inf')
 
         for iteration in range(self.n_iterations):
-            cost_epoch = 0
             indices = np.random.permutation(n_samples)
             X_b_shuffled = X_b[indices]
             y_shuffled = y[indices]
@@ -158,20 +162,24 @@ class NumpyLogisticRegressionGD:
                 if X_batch.shape[0] == 0:
                     continue
 
-                z = X_batch @ self.theta
-                h = self._sigmoid(z)
+                h = self._sigmoid(X_batch @ self.theta)
                 gradient = (1 / len(y_batch)) * X_batch.T @ (h - y_batch)
                 self.theta -= self.learning_rate * gradient
 
-                cost_epoch += self._compute_cost(X_batch, y_batch, self.theta) * len(y_batch)
+            current_cost = self._compute_cost(X_b, y, self.theta)
+            self.cost_history.append(current_cost)
 
-            epoch_avg_cost = cost_epoch / n_samples
-            self.cost_history.append(epoch_avg_cost)
             if self.verbose and (iteration % 100 == 0 or iteration == self.n_iterations - 1):
-                logger.info(f"Iteration {iteration + 1}/{self.n_iterations}, Cost: {epoch_avg_cost:.6f}")
+                logger.info(f"Iteration {iteration + 1}/{self.n_iterations}, Cost: {current_cost:.6f}")
+
+            if abs(prev_cost - current_cost) < self.tol:
+                logger.info(f"Converged at iteration {iteration + 1}, Cost: {current_cost:.6f}")
+                break
+            prev_cost = current_cost
+
         return self
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
         Predicts probabilities using the fitted model.
 
@@ -184,7 +192,7 @@ class NumpyLogisticRegressionGD:
         X_b = add_bias_term(X)
         return self._sigmoid(X_b @ self.theta)
 
-    def predict(self, X, threshold=0.5):
+    def predict(self, X: np.ndarray, threshold=0.5) -> np.ndarray:
         """
         Predicts binary labels using the fitted model.
 
@@ -198,26 +206,26 @@ class NumpyLogisticRegressionGD:
         return (self.predict_proba(X) >= threshold).astype(int)
 
 
-def run_numpy_logistic_regression_gd(X_train, y_train, X_val, y_val, X_test, y_test, num_features):
+def run_numpy_logistic_regression_gd(X_train: np.ndarray, y_train: np.ndarray,
+                                     X_val: np.ndarray, y_val: np.ndarray,
+                                     X_test: np.ndarray, y_test: np.ndarray) -> tuple:
     """
     Trains and evaluates the logistic regression model using gradient descent.
 
     Args:
         X_train, X_val, X_test (np.ndarray): Feature matrices for training, validation, and testing.
         y_train, y_val, y_test (np.ndarray): Target vectors for training, validation, and testing.
-        num_features (int): Number of features.
 
     Returns:
-        dict: Evaluation metrics for each dataset split.
+        tuple: (Evaluation metrics dict, cost history list)
     """
     logger.info("Running NumPy Logistic Regression (Gradient Descent)...")
 
-    model = NumpyLogisticRegressionGD(learning_rate=0.1, n_iterations=500, batch_size=64, verbose=False)
+    model = NumpyLogisticRegressionGD(learning_rate=0.1, n_iterations=500, batch_size=64, verbose=False, tol=1e-5)
     model.fit(X_train, y_train)
 
     results = {}
-    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val),
-                                              ("test", X_test, y_test)]:
+    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val), ("test", X_test, y_test)]:
         y_pred = model.predict(X_split)
         y_proba = model.predict_proba(X_split)
 
@@ -226,9 +234,9 @@ def run_numpy_logistic_regression_gd(X_train, y_train, X_val, y_val, X_test, y_t
             "F1": f1_score(y_split_true, y_pred, zero_division=0),
             "Precision": precision_score(y_split_true, y_pred, zero_division=0),
             "Recall": recall_score(y_split_true, y_pred, zero_division=0),
-            "ROC_AUC": roc_auc_score(y_split_true, y_proba) if y_proba is not None else "N/A"
+            "ROC_AUC": roc_auc_score(y_split_true, y_proba) if len(np.unique(y_split_true)) > 1 else "N/A"
         }
         results[split_name] = metrics
-        logger.info(
-            f"Logistic Regression ({split_name}) - Accuracy: {metrics['Accuracy']:.4f}, F1: {metrics['F1']:.4f}, ROC_AUC: {metrics['ROC_AUC'] if isinstance(metrics['ROC_AUC'], str) else metrics['ROC_AUC']:.4f}")
-    return results
+        logger.info(f"Logistic Regression ({split_name}) - Accuracy: {metrics['Accuracy']:.4f}, F1: {metrics['F1']:.4f}, ROC_AUC: {metrics['ROC_AUC'] if isinstance(metrics['ROC_AUC'], float) else 'N/A'}")
+
+    return results, model.cost_history

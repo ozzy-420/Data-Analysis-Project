@@ -2,7 +2,6 @@ import pandas as pd
 import logging
 from sklearn.model_selection import train_test_split
 
-
 logger = logging.getLogger(__name__)
 
 MAPPING_DICT = {
@@ -15,7 +14,7 @@ MAPPING_DICT = {
 }
 
 
-def apply_custom_mapping(data, mapping_dict):
+def apply_custom_mapping(data: pd.DataFrame, mapping_dict: dict) -> pd.DataFrame:
     """
     Maps categorical values in columns based on the provided dictionary.
 
@@ -34,13 +33,12 @@ def apply_custom_mapping(data, mapping_dict):
             df[column] = df[column].map(mapping).fillna(df[column])
             # Ensure column type is object after mapping
             if pd.api.types.is_numeric_dtype(data[column]):
-                if not all(isinstance(x, str) for x in df[column].unique()):
-                    logger.warning(f"Column '{column}' contains numeric values after mapping. Converting to string.")
+                if any(isinstance(v, str) for v in mapping.values()):
                     df[column] = df[column].astype(str)
     return df
 
 
-def prepare_data_for_ml(raw_data, target_column, mapping_dict):
+def prepare_data_for_ml(raw_data: pd.DataFrame, target_column: str, mapping_dict: dict):
     """
     Prepares data for machine learning by mapping values, splitting datasets, and identifying feature types.
 
@@ -76,37 +74,59 @@ def prepare_data_for_ml(raw_data, target_column, mapping_dict):
     # Identify numerical and categorical features
     logger.debug("Identifying numerical and categorical features.")
     numerical_features = X_train.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    categorical_features = X_train.select_dtypes(include=['object']).columns.tolist()
+    categorical_features = X_train.select_dtypes(include=['object', 'category']).columns.tolist()
+
+    # Ensure mapped columns are treated as categorical if they became objects
+    for col in mapping_dict.keys():
+        if col in X_train.columns and col not in categorical_features:
+            categorical_features.append(col)
+            if col in numerical_features:
+                numerical_features.remove(col)
+        if col in categorical_features and X_train[col].dtype != 'object':
+            X_train[col] = X_train[col].astype(str)
+            X_val[col] = X_val[col].astype(str)
+            X_test[col] = X_test[col].astype(str)
 
     # Handle potential categorical features stored as numeric
-    potential_cats_numeric = ['MARRIAGE'] + [f'PAY_{i}' for i in range(7)]
+    pay_cols = [f'PAY_{i}' for i in [0, 2, 3, 4, 5, 6]]
+    potential_cats_numeric = [col for col in pay_cols if col in X_train.columns]
+
     for col in potential_cats_numeric:
-        if col in numerical_features and col not in mapping_dict:
+        if col in numerical_features:
             logger.debug(f"Converting column '{col}' from numeric to categorical.")
             X_train[col] = X_train[col].astype(str)
             X_val[col] = X_val[col].astype(str)
             X_test[col] = X_test[col].astype(str)
             categorical_features.append(col)
             numerical_features.remove(col)
-        elif col in X_train.columns and col not in categorical_features and col not in numerical_features:
-            logger.debug(f"Ensuring column '{col}' is treated as categorical.")
-            X_train[col] = X_train[col].astype(str)
-            X_val[col] = X_val[col].astype(str)
-            X_test[col] = X_test[col].astype(str)
-            categorical_features.append(col)
 
-    # Check for unclassified columns
-    all_cols = set(numerical_features) | set(categorical_features)
-    missing_cols = set(X_train.columns) - all_cols
+    # Re-check for unclassified columns
+    identified_cols = set(numerical_features) | set(categorical_features)
+    all_X_cols = set(X_train.columns)
+    missing_cols = all_X_cols - identified_cols
+
     if missing_cols:
-        logger.warning(f"Unclassified columns detected: {missing_cols}. Treating them as categorical.")
+        logger.warning(f"Unclassified columns detected: {missing_cols}. Attempting to classify.")
         for col in missing_cols:
-            X_train[col] = X_train[col].astype(str)
-            X_val[col] = X_val[col].astype(str)
-            X_test[col] = X_test[col].astype(str)
-            categorical_features.append(col)
+            if X_train[col].dtype == 'object' or X_train[col].nunique() < 20:
+                logger.info(f"Column '{col}' classified as categorical.")
+                X_train[col] = X_train[col].astype(str)
+                X_val[col] = X_val[col].astype(str)
+                X_test[col] = X_test[col].astype(str)
+                categorical_features.append(col)
+            else:
+                logger.info(f"Column '{col}' classified as numerical.")
+                numerical_features.append(col)
 
-    logger.info(f"Numerical features: {numerical_features}")
-    logger.info(f"Categorical features: {categorical_features}")
+    # Ensure no overlap between numerical and categorical features
+    overlap = set(numerical_features) & set(categorical_features)
+    if overlap:
+        logger.error(f"Overlap detected between numerical and categorical features: {overlap}")
+        for col_overlap in overlap:
+            numerical_features.remove(col_overlap)
+        logger.warning(f"Overlap resolved. Updated numerical features: {sorted(numerical_features)}")
 
-    return X_train, X_val, X_test, y_train, y_val, y_test, numerical_features, categorical_features
+    logger.info(f"Final Numerical features: {sorted(numerical_features)}")
+    logger.info(f"Final Categorical features: {sorted(categorical_features)}")
+
+    return X_train, X_val, X_test, y_train, y_val, y_test, sorted(numerical_features), sorted(categorical_features)

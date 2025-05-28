@@ -37,15 +37,21 @@ def add_results_to_df(df, model_name, metrics_train, metrics_val, metrics_test, 
     Returns:
         pd.DataFrame: Updated DataFrame with the new results.
     """
+    def get_metric(metrics_dict, key, default_val=np.nan):
+        val = metrics_dict.get(key, default_val)
+        if isinstance(val, str) and val == "N/A":
+            return np.nan
+        return val
+
     if is_regression:
         new_row = {
             "Model": model_name,
-            "Train Acc/MSE": metrics_train.get("MSE", np.nan),
-            "Val Acc/MSE": metrics_val.get("MSE", np.nan),
-            "Test Acc/MSE": metrics_test.get("MSE", np.nan),
-            "Train F1/R2": metrics_train.get("R2", np.nan),
-            "Val F1/R2": metrics_val.get("R2", np.nan),
-            "Test F1/R2": metrics_test.get("R2", np.nan),
+            "Train Acc/MSE": get_metric(metrics_train, "MSE"),
+            "Val Acc/MSE": get_metric(metrics_val, "MSE"),
+            "Test Acc/MSE": get_metric(metrics_test, "MSE"),
+            "Train F1/R2": get_metric(metrics_train, "R2"),
+            "Val F1/R2": get_metric(metrics_val, "R2"),
+            "Test F1/R2": get_metric(metrics_test, "R2"),
             "Train Precision": np.nan, "Val Precision": np.nan, "Test Precision": np.nan,
             "Train Recall": np.nan, "Val Recall": np.nan, "Test Recall": np.nan,
             "Train ROC_AUC": np.nan, "Val ROC_AUC": np.nan, "Test ROC_AUC": np.nan,
@@ -54,21 +60,21 @@ def add_results_to_df(df, model_name, metrics_train, metrics_val, metrics_test, 
     else:
         new_row = {
             "Model": model_name,
-            "Train Acc/MSE": metrics_train.get("Accuracy", np.nan),
-            "Val Acc/MSE": metrics_val.get("Accuracy", np.nan),
-            "Test Acc/MSE": metrics_test.get("Accuracy", np.nan),
-            "Train F1/R2": metrics_train.get("F1", np.nan),
-            "Val F1/R2": metrics_val.get("F1", np.nan),
-            "Test F1/R2": metrics_test.get("F1", np.nan),
-            "Train Precision": metrics_train.get("Precision", np.nan),
-            "Val Precision": metrics_val.get("Precision", np.nan),
-            "Test Precision": metrics_test.get("Precision", np.nan),
-            "Train Recall": metrics_train.get("Recall", np.nan),
-            "Val Recall": metrics_val.get("Recall", np.nan),
-            "Test Recall": metrics_test.get("Recall", np.nan),
-            "Train ROC_AUC": metrics_train.get("ROC_AUC", np.nan) if isinstance(metrics_train.get("ROC_AUC"), (int, float)) else np.nan,
-            "Val ROC_AUC": metrics_val.get("ROC_AUC", np.nan) if isinstance(metrics_val.get("ROC_AUC"), (int, float)) else np.nan,
-            "Test ROC_AUC": metrics_test.get("ROC_AUC", np.nan) if isinstance(metrics_test.get("ROC_AUC"), (int, float)) else np.nan,
+            "Train Acc/MSE": get_metric(metrics_train, "Accuracy"),
+            "Val Acc/MSE": get_metric(metrics_val, "Accuracy"),
+            "Test Acc/MSE": get_metric(metrics_test, "Accuracy"),
+            "Train F1/R2": get_metric(metrics_train, "F1"),
+            "Val F1/R2": get_metric(metrics_val, "F1"),
+            "Test F1/R2": get_metric(metrics_test, "F1"),
+            "Train Precision": get_metric(metrics_train, "Precision"),
+            "Val Precision": get_metric(metrics_val, "Precision"),
+            "Test Precision": get_metric(metrics_test, "Precision"),
+            "Train Recall": get_metric(metrics_train, "Recall"),
+            "Val Recall": get_metric(metrics_val, "Recall"),
+            "Test Recall": get_metric(metrics_test, "Recall"),
+            "Train ROC_AUC": get_metric(metrics_train, "ROC_AUC"),
+            "Val ROC_AUC": get_metric(metrics_val, "ROC_AUC"),
+            "Test ROC_AUC": get_metric(metrics_test, "ROC_AUC"),
             "Notes": notes
         }
 
