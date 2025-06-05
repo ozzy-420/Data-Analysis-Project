@@ -23,33 +23,12 @@ class PyTorchLogisticRegression(nn.Module):
         self.linear = nn.Linear(input_dim, 1)
 
     def forward(self, x):
-        """
-        Forward pass for the model.
-        Args:
-            x (torch.Tensor): Input features.
-        Returns:
-            torch.Tensor: Logits.
-        """
+        """Forward pass for the model."""
         return self.linear(x)
 
 
 def train_pytorch_model(model, train_loader, val_loader, criterion, optimizer, device, epochs=100, verbose=False):
-    """
-    Trains a PyTorch model and evaluates it on the validation set.
-
-    Args:
-        model (nn.Module): PyTorch model.
-        train_loader (DataLoader): DataLoader for training data.
-        val_loader (DataLoader): DataLoader for validation data.
-        criterion (nn.Module): Loss function.
-        optimizer (torch.optim.Optimizer): Optimizer.
-        device (torch.device): Device to train on (CPU/GPU).
-        epochs (int): Number of epochs.
-        verbose (bool): Whether to print progress.
-
-    Returns:
-        dict: Training history containing loss and accuracy.
-    """
+    """Trains a PyTorch model and evaluates it on the validation set."""
     model.to(device)
     history = {'train_loss': [], 'val_loss': [], 'val_accuracy': [], 'val_roc_auc': []}
 
@@ -112,18 +91,7 @@ def train_pytorch_model(model, train_loader, val_loader, criterion, optimizer, d
 
 
 def evaluate_pytorch_model(model, data_loader, device, criterion=None):
-    """
-    Evaluates a PyTorch model on a given dataset.
-
-    Args:
-        model (nn.Module): PyTorch model.
-        data_loader (DataLoader): DataLoader for evaluation data.
-        device (torch.device): Device to evaluate on (CPU/GPU).
-        criterion (nn.Module, optional): Loss function.
-
-    Returns:
-        dict: Evaluation metrics including accuracy, F1, precision, recall, and ROC AUC.
-    """
+    """Evaluates a PyTorch model on a given dataset."""
     model.to(device)
     model.eval()
     all_labels = []
@@ -185,20 +153,7 @@ def evaluate_pytorch_model(model, data_loader, device, criterion=None):
 
 def run_pytorch_logistic_regression(X_train_np, y_train_np, X_val_np, y_val_np, X_test_np, y_test_np, input_dim,
                                     epochs=50, lr=0.01, batch_size=64):
-    """
-    Runs PyTorch logistic regression training and evaluation on CPU and GPU (if available).
-
-    Args:
-        X_train_np, X_val_np, X_test_np (np.ndarray): Feature matrices for training, validation, and testing.
-        y_train_np, y_val_np, y_test_np (np.ndarray): Target vectors for training, validation, and testing.
-        input_dim (int): Number of input features.
-        epochs (int): Number of epochs.
-        lr (float): Learning rate.
-        batch_size (int): Batch size.
-
-    Returns:
-        tuple: (metrics_cpu, metrics_gpu, time_cpu, time_gpu, history_cpu, history_gpu)
-    """
+    """Runs PyTorch logistic regression training and evaluation on CPU and GPU (if available)."""
     logger.info("--- PyTorch Logistic Regression ---")
 
     # Convert NumPy arrays to PyTorch tensors

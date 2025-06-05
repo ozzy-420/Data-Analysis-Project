@@ -8,15 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_bias_term(X: np.ndarray) -> np.ndarray:
-    """
-    Adds a bias term (column of ones) to the feature matrix.
-
-    Args:
-        X (np.ndarray): Feature matrix.
-
-    Returns:
-        np.ndarray: Feature matrix with bias term added.
-    """
+    """Adds a bias term (column of ones) to the feature matrix. """
     return np.concatenate([np.ones((X.shape[0], 1)), X], axis=1)
 
 
@@ -29,16 +21,7 @@ class NumpyLinearRegressionClosedForm:
         self.theta = None
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> 'NumpyLinearRegressionClosedForm':
-        """
-        Fits the linear regression model using the closed-form solution.
-
-        Args:
-            X (np.ndarray): Feature matrix.
-            y (np.ndarray): Target vector.
-
-        Returns:
-            self: Fitted model.
-        """
+        """Fits the linear regression model using the closed-form solution."""
         X_b = add_bias_term(X)
         try:
             self.theta = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y
@@ -48,15 +31,7 @@ class NumpyLinearRegressionClosedForm:
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predicts target values using the fitted model.
-
-        Args:
-            X (np.ndarray): Feature matrix.
-
-        Returns:
-            np.ndarray: Predicted values.
-        """
+        """Predicts target values using the fitted model."""
         X_b = add_bias_term(X)
         return X_b @ self.theta
 
@@ -64,16 +39,7 @@ class NumpyLinearRegressionClosedForm:
 def run_numpy_linear_regression_closed_form(X_train: np.ndarray, y_train: np.ndarray,
                                             X_val: np.ndarray, y_val: np.ndarray,
                                             X_test: np.ndarray, y_test: np.ndarray) -> dict:
-    """
-    Trains and evaluates the linear regression model using the closed-form solution.
-
-    Args:
-        X_train, X_val, X_test (np.ndarray): Feature matrices for training, validation, and testing.
-        y_train, y_val, y_test (np.ndarray): Target vectors for training, validation, and testing.
-
-    Returns:
-        dict: Evaluation metrics for each dataset split.
-    """
+    """Trains and evaluates the linear regression model using the closed-form solution."""
     logger.info("Running NumPy Linear Regression (Closed Form)...")
 
     model = NumpyLinearRegressionClosedForm()
@@ -108,29 +74,11 @@ class NumpyLogisticRegressionGD:
         self.test_cost_history = []
 
     def _sigmoid(self, z: np.ndarray) -> np.ndarray:
-        """
-        Computes the sigmoid function.
-
-        Args:
-            z (np.ndarray): Input array.
-
-        Returns:
-            np.ndarray: Sigmoid output.
-        """
+        """Computes the sigmoid function. """
         return 1 / (1 + np.exp(-np.clip(z, -250, 250)))
 
     def _compute_cost(self, X: np.ndarray, y: np.ndarray, theta: np.ndarray) -> float:
-        """
-        Computes the logistic regression cost function.
-
-        Args:
-            X (np.ndarray): Feature matrix.
-            y (np.ndarray): Target vector.
-            theta (np.ndarray): Model parameters.
-
-        Returns:
-            float: Cost value.
-        """
+        """Computes the logistic regression cost function."""
         m = len(y)
         h = self._sigmoid(X @ theta)
         epsilon = 1e-5  # To prevent log(0)
@@ -179,49 +127,23 @@ class NumpyLogisticRegressionGD:
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predicts probabilities using the fitted model.
-
-        Args:
-            X (np.ndarray): Feature matrix.
-
-        Returns:
-            np.ndarray: Predicted probabilities.
-        """
+        """Predicts probabilities using the fitted model."""
         X_b = add_bias_term(X)
         return self._sigmoid(X_b @ self.theta)
 
     def predict(self, X: np.ndarray, threshold=0.5) -> np.ndarray:
-        """
-        Predicts binary labels using the fitted model.
-
-        Args:
-            X (np.ndarray): Feature matrix.
-            threshold (float): Decision threshold.
-
-        Returns:
-            np.ndarray: Predicted labels.
-        """
+        """Predicts binary labels using the fitted model."""
         return (self.predict_proba(X) >= threshold).astype(int)
 
 
 def run_numpy_logistic_regression_gd(X_train: np.ndarray, y_train: np.ndarray,
                                      X_val: np.ndarray, y_val: np.ndarray,
                                      X_test: np.ndarray, y_test: np.ndarray) -> tuple:
-    """
-    Trains and evaluates the logistic regression model using gradient descent.
-
-    Args:
-        X_train, X_val, X_test (np.ndarray): Feature matrices for training, validation, and testing.
-        y_train, y_val, y_test (np.ndarray): Target vectors for training, validation, and testing.
-
-    Returns:
-        tuple: (Evaluation metrics dict, cost history list)
-    """
+    """Trains and evaluates the logistic regression model using gradient descent."""
     logger.info("Running NumPy Logistic Regression (Gradient Descent)...")
 
     model = NumpyLogisticRegressionGD(learning_rate=0.1, n_iterations=500, batch_size=64, verbose=False, tol=1e-5)
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train, X_val=X_val, y_val=y_val)
 
     results = {}
     for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val),
@@ -238,6 +160,7 @@ def run_numpy_logistic_regression_gd(X_train: np.ndarray, y_train: np.ndarray,
         }
         results[split_name] = metrics
         logger.info(
-            f"Logistic Regression ({split_name}) - Accuracy: {metrics['Accuracy']:.4f}, F1: {metrics['F1']:.4f}, ROC_AUC: {metrics['ROC_AUC'] if isinstance(metrics['ROC_AUC'], float) else 'N/A'}")
+            f"Logistic Regression ({split_name}) - Accuracy: {metrics['Accuracy']:.4f}, "
+            f"F1: {metrics['F1']:.4f}, ROC_AUC: {metrics['ROC_AUC']if isinstance(metrics['ROC_AUC'], float) else 'N/A'}")
 
     return results, model.cost_history, model.test_cost_history

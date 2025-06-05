@@ -3,40 +3,41 @@ import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib
+from utils.config import DEFAULT_PLOT_CONFIG
 
 matplotlib.use('TkAgg')
 logger = logging.getLogger(__name__)
 
 
-def create_boxplot(data, output_file, plot_config, x=None, y=None, hue=None):
+def create_boxplot(data, output_file, plot_config=DEFAULT_PLOT_CONFIG, x=None, y=None, hue=None):
     """Generates and saves a boxplot."""
     sns.catplot(data=data, x=x, y=y, hue=hue, kind="box")
     plt.savefig(output_file, dpi=plot_config["dpi"], bbox_inches=plot_config["bbox_inches"])
     plt.close()
 
 
-def create_violinplot(data, output_file, plot_config, x=None, y=None, hue=None):
+def create_violinplot(data, output_file, plot_config=DEFAULT_PLOT_CONFIG, x=None, y=None, hue=None):
     """Generates and saves a violin plot."""
     sns.catplot(data=data, x=x, y=y, hue=hue, kind="violin")
     plt.savefig(output_file, dpi=plot_config["dpi"], bbox_inches=plot_config["bbox_inches"])
     plt.close()
 
 
-def create_histogram(data, output_file, plot_config, x=None, hue=None):
+def create_histogram(data, output_file, plot_config=DEFAULT_PLOT_CONFIG, x=None, hue=None):
     """Generates and saves a histogram."""
     sns.histplot(data=data, x=x, kde=True, hue=hue)
     plt.savefig(output_file, dpi=plot_config["dpi"], bbox_inches=plot_config["bbox_inches"])
     plt.close()
 
 
-def create_regression_plot(data, output_file, plot_config, x=None, y=None, hue=None):
+def create_regression_plot(data, output_file, plot_config=DEFAULT_PLOT_CONFIG, x=None, y=None, hue=None):
     """Generates and saves a regression plot."""
     sns.lmplot(data=data, x=x, y=y, hue=hue)
     plt.savefig(output_file, dpi=plot_config["dpi"], bbox_inches=plot_config["bbox_inches"])
     plt.close()
 
 
-def create_heatmap(data, output_file, plot_config):
+def create_heatmap(data, output_file, plot_config=DEFAULT_PLOT_CONFIG):
     """Generates and saves a correlation heatmap using only numeric columns."""
     numeric_data = data.select_dtypes(include=["float", "int"])  # Keep only numeric columns
     corr_matrix = numeric_data.corr()  # Compute correlations
@@ -45,7 +46,7 @@ def create_heatmap(data, output_file, plot_config):
     plt.close()
 
 
-def create_visualizations(data, output_files, plot_config, x=None, y=None, hue=None):
+def create_visualizations(data, output_files, plot_config=DEFAULT_PLOT_CONFIG, x=None, y=None, hue=None):
     """Generates and saves all visualizations."""
     create_boxplot(data, output_files["boxplot"], plot_config, x, y, hue)
     create_violinplot(data, output_files["violinplot"], plot_config, x, y, hue)

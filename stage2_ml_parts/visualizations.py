@@ -13,28 +13,12 @@ OUTPUT_PATH = os.path.join(OUTPUT_PATH, "output", "stage2")
 
 
 def _filename_to_path(filename):
-    """
-    Converts a filename to a full path based on the current working directory.
-
-    Args:
-        filename (str): The name of the file to convert.
-
-    Returns:
-        str: Full path to the file.
-    """
+    """Converts a filename to a full path based on the current working directory."""
     return os.path.join(OUTPUT_PATH, filename)
 
 
 def plot_model_comparison_metrics(results_df, metric_key, title, filename):
-    """
-    Generates and saves a bar chart comparing models based on a specific metric.
-
-    Args:
-        results_df (pd.DataFrame): DataFrame with model results.
-        metric_key (str): The column name of the metric to plot (e.g., 'Test F1/R2').
-        title (str): Title for the plot.
-        filename (str): Filename to save the plot.
-    """
+    """Generates and saves a bar chart comparing models based on a specific metric."""
     if results_df.empty or metric_key not in results_df.columns:
         logger.warning(f"Cannot generate plot '{title}'. DataFrame is empty or metric key '{metric_key}' not found.")
         return
@@ -70,14 +54,7 @@ def plot_model_comparison_metrics(results_df, metric_key, title, filename):
 
 
 def plot_training_times(times_dict, title, filename):
-    """
-    Generates and saves a bar chart for training times.
-
-    Args:
-        times_dict (dict): Dictionary with model/device names as keys and times as values.
-        title (str): Title for the plot.
-        filename (str): Filename to save the plot.
-    """
+    """Generates and saves a bar chart for training times."""
     if not times_dict:
         logger.warning(f"Cannot generate plot '{title}'. Times dictionary is empty.")
         return
@@ -108,14 +85,7 @@ def plot_training_times(times_dict, title, filename):
 
 
 def plot_numpy_cost_history(cost_history, title, filename):
-    """
-    Generates and saves a line plot of the cost history for NumPy GD.
-
-    Args:
-        cost_history (list): List of cost values per epoch/iteration.
-        title (str): Title for the plot.
-        filename (str): Filename to save the plot.
-    """
+    """Generates and saves a line plot of the cost history for NumPy GD."""
     if not cost_history:
         logger.warning(f"Cannot generate plot '{title}'. Cost history is empty.")
         return
@@ -137,14 +107,8 @@ def plot_numpy_cost_history(cost_history, title, filename):
 
 
 def plot_pytorch_train_val_curves(history, model_name_suffix="", filename_prefix="pytorch_training"):
-    """
-    Generates and saves plots for PyTorch training/validation loss and validation accuracy.
-
-    Args:
-        history (dict): Dictionary from train_pytorch_model (e.g., {'train_loss': [], 'val_loss': [], 'val_accuracy': [], 'val_roc_auc': []}).
-        model_name_suffix (str): Suffix to add to plot titles (e.g., " (CPU)").
-        filename_prefix (str): Prefix for the saved plot filenames.
-    """
+    """Generates and saves plots for PyTorch training/validation loss and validation accuracy.
+    filename_prefix (str): Prefix for the saved plot filenames."""
     if not history or not history.get('train_loss'):
         logger.warning(
             f"Cannot generate PyTorch training curves for {model_name_suffix}. History is empty or incomplete.")

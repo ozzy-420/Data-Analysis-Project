@@ -5,7 +5,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def compute_statistics(data):
+def compute_statistics(data, output_file=None):
+    """Computes basic statistics for a given dataset"""
     logger.debug("Computing statistics...")
     stats = {}
 
@@ -28,11 +29,11 @@ def compute_statistics(data):
                 'class_proportions': data[column].value_counts(normalize=True).to_dict()
             }
     logger.debug("Statistics computed")
+
+    if output_file:
+        logger.debug(f"Saving statistics to {output_file}...")
+        stats_df = pd.DataFrame(stats).T
+        stats_df.to_csv(output_file)
+        logger.info(f"Statistics saved to file {output_file}")
+
     return stats
-
-
-def save_statistics(stats, output_file="data/statistics.csv"):
-    logger.debug(f"Saving statistics to {output_file}...")
-    stats_df = pd.DataFrame(stats).T
-    stats_df.to_csv(output_file)
-    logger.info(f"Statistics saved to file {output_file}")

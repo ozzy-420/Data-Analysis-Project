@@ -5,21 +5,7 @@ from sklearn.metrics import accuracy_score
 
 
 def perform_sklearn_cross_validation(pipeline, X, y, n_splits, scoring, logger, output_dir=None):
-    """
-    Performs cross-validation for a scikit-learn pipeline.
-
-    Args:
-        pipeline (Pipeline): Scikit-learn pipeline to evaluate.
-        X (np.ndarray or pd.DataFrame): Feature matrix.
-        y (np.ndarray or pd.Series): Target vector.
-        n_splits (int): Number of folds for cross-validation.
-        scoring (str): Scoring metric for evaluation.
-        logger (logging.Logger): Logger instance for logging.
-        output_dir (str, optional): Directory to save results (if applicable).
-
-    Returns:
-        None
-    """
+    """Performs cross-validation for a scikit-learn pipeline."""
     logger.info(f"Performing {n_splits}-fold cross-validation for scikit-learn model '{pipeline.steps[-1][0]}'...")
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True)
 
@@ -43,28 +29,10 @@ def perform_sklearn_cross_validation(pipeline, X, y, n_splits, scoring, logger, 
 
 
 def perform_numpy_cross_validation(model_class, X_processed, y_values, n_splits, model_params, logger, output_dir=None):
-    """
-    Performs cross-validation for a custom NumPy-based model.
-
-    Args:
-        model_class (class): Custom NumPy model class.
-        X_processed (np.ndarray): Preprocessed feature matrix.
-        y_values (np.ndarray): Target vector.
-        n_splits (int): Number of folds for cross-validation.
-        model_params (dict): Parameters for initializing the model.
-        logger (logging.Logger): Logger instance for logging.
-        output_dir (str, optional): Directory to save results (if applicable).
-
-    Returns:
-        None
-    """
+    """Performs cross-validation for a custom NumPy-based model."""
     logger.info(f"Performing {n_splits}-fold cross-validation for NumPy model '{model_class.__name__}'...")
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
     fold_scores = []
-
-    if X_processed.shape[0] == 0:
-        logger.error("Cannot perform NumPy CV: Processed data is empty.")
-        return
 
     for fold, (train_idx, val_idx) in enumerate(skf.split(X_processed, y_values)):
         logger.debug(f"NumPy CV - Fold {fold + 1}/{n_splits}")

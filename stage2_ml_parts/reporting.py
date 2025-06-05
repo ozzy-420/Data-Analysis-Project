@@ -3,12 +3,7 @@ import numpy as np
 
 
 def initialize_results_df():
-    """
-    Initializes an empty DataFrame to store model evaluation results.
-
-    Returns:
-        pd.DataFrame: Empty DataFrame with predefined columns for results.
-    """
+    """Initializes an empty DataFrame to store model evaluation results."""
     columns = [
         "Model",
         "Train Acc/MSE", "Val Acc/MSE", "Test Acc/MSE",
@@ -22,21 +17,7 @@ def initialize_results_df():
 
 
 def add_results_to_df(df, model_name, metrics_train, metrics_val, metrics_test, is_regression=False, notes=""):
-    """
-    Adds the evaluation results of a model to the DataFrame.
-
-    Args:
-        df (pd.DataFrame): DataFrame to store results.
-        model_name (str): Name of the model.
-        metrics_train (dict): Metrics for the training set.
-        metrics_val (dict): Metrics for the validation set.
-        metrics_test (dict): Metrics for the test set.
-        is_regression (bool): Flag indicating if the task is regression.
-        notes (str): Additional notes about the model.
-
-    Returns:
-        pd.DataFrame: Updated DataFrame with the new results.
-    """
+    """Adds the evaluation results of a model to the DataFrame."""
     def get_metric(metrics_dict, key, default_val=np.nan):
         val = metrics_dict.get(key, default_val)
         if isinstance(val, str) and val == "N/A":
@@ -88,25 +69,12 @@ def add_results_to_df(df, model_name, metrics_train, metrics_val, metrics_test, 
 
 
 def display_results(df):
-    """
-    Displays the results DataFrame in a formatted way.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing model evaluation results.
-    """
+    """Displays the results DataFrame in a formatted way."""
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 1000)
     print(df.to_string(float_format="%.4f"))
 
 
 def add_bias_term(X):
-    """
-    Adds a column of ones (bias term) to the feature matrix.
-
-    Args:
-        X (np.ndarray): Feature matrix.
-
-    Returns:
-        np.ndarray: Feature matrix with bias term added.
-    """
+    """Adds a column of ones (bias term) to the feature matrix."""
     return np.concatenate([np.ones((X.shape[0], 1)), X], axis=1)

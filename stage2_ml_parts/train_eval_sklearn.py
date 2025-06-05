@@ -8,18 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def evaluate_model(model, X, y_true, is_regression=False):
-    """
-    Evaluates a model and returns performance metrics.
-
-    Args:
-        model: Trained model to evaluate.
-        X: Features for evaluation.
-        y_true: True labels or target values.
-        is_regression (bool): Flag indicating if the task is regression.
-
-    Returns:
-        dict: Dictionary containing evaluation metrics.
-    """
+    """Evaluates a model and returns performance metrics. """
     logger.debug("Evaluating model...")
     if X.shape[0] == 0:  # Handle empty X
         logger.warning("Attempting to evaluate on empty data. Returning N/A metrics.")
@@ -63,22 +52,7 @@ def evaluate_model(model, X, y_true, is_regression=False):
 
 
 def train_and_evaluate_sklearn_model(pipeline, X_train, y_train, X_val, y_val, X_test, y_test, is_regression=False):
-    """
-    Trains and evaluates a Sklearn model on training, validation, and test datasets.
-
-    Args:
-        pipeline: Sklearn pipeline containing preprocessing and model.
-        X_train: Training features.
-        y_train: Training labels or target values.
-        X_val: Validation features.
-        y_val: Validation labels or target values.
-        X_test: Test features.
-        y_test: Test labels or target values.
-        is_regression (bool): Flag indicating if the task is regression.
-
-    Returns:
-        tuple: Metrics for training, validation, and test datasets.
-    """
+    """Trains and evaluates a Sklearn model on training, validation, and test datasets."""
     logger.debug("Training model...")
     if X_train.shape[0] == 0:
         logger.error("Training data is empty. Skipping training and evaluation.")

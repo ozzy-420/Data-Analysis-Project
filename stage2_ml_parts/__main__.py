@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 import pandas as pd
 from stage1_data_analysis.data_loader import load_data
-from stage2_ml_parts.data_preparation import prepare_data_for_ml, MAPPING_DICT
+from stage2_ml_parts.data_preparation import prepare_data_for_ml
 from stage2_ml_parts.build_pipelines import create_preprocessor, get_sklearn_models_with_pipelines
 from stage2_ml_parts.train_eval_sklearn import train_and_evaluate_sklearn_model
 from stage2_ml_parts.numpy_implementations import run_numpy_logistic_regression_gd
@@ -26,22 +26,13 @@ TARGET_COLUMN = 'default.payment.next.month'
 def main():
     logger.info("Starting Stage 2: Machine Learning Models")
 
-    # Initialize results DataFrame
     results_df = initialize_results_df()
     cost_history_numpy_log_reg = None
-    history_pytorch_cpu = None
-    history_pytorch_gpu = None
-    time_cpu_pytorch = float('nan')
-    time_gpu_pytorch = float('nan')
 
-    # --- Data Preparation ---
-    logger.info("Step 1: Preparing data...")
+    logger.info("Preparing data...")
     raw_data = load_data(DEFAULT_DATA_SOURCE)
-    if raw_data.columns[0].lower() == 'id' or raw_data.columns[0] == '':
-        raw_data = raw_data.iloc[:, 1:]
-
     X_train, X_val, X_test, y_train, y_val, y_test, numerical_features, categorical_features = \
-        prepare_data_for_ml(raw_data, TARGET_COLUMN, MAPPING_DICT)
+        prepare_data_for_ml(raw_data, TARGET_COLUMN)
 
     logger.debug(f"Data prepared. Dataset sizes: Training X: {X_train.shape}, Validation X: {X_val.shape}, Test X: {X_test.shape}")
 
@@ -74,7 +65,7 @@ def main():
         X_test_processed, y_test.values,
     )
     if numpy_log_reg_output:
-        metrics_numpy_log_reg, cost_history_numpy_log_reg = numpy_log_reg_output
+        metrics_numpy_log_reg, cost_history_numpy_log_reg, _ = numpy_log_reg_output
         results_df = add_results_to_df(results_df, "NumPy Logistic Regression (GD)",
                                        metrics_numpy_log_reg['train'],
                                        metrics_numpy_log_reg['val'],
