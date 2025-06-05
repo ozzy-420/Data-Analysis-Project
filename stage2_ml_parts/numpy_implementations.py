@@ -24,6 +24,7 @@ class NumpyLinearRegressionClosedForm:
     """
     Linear Regression implementation using the closed-form solution.
     """
+
     def __init__(self):
         self.theta = None
 
@@ -79,7 +80,8 @@ def run_numpy_linear_regression_closed_form(X_train: np.ndarray, y_train: np.nda
     model.fit(X_train, y_train)
 
     results = {}
-    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val), ("test", X_test, y_test)]:
+    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val),
+                                              ("test", X_test, y_test)]:
         y_pred = model.predict(X_split)
         metrics = {
             "MSE": mean_squared_error(y_split_true, y_pred),
@@ -94,6 +96,7 @@ class NumpyLogisticRegressionGD:
     """
     Logistic Regression implementation using gradient descent.
     """
+
     def __init__(self, learning_rate=0.01, n_iterations=1000, batch_size=32, tol=1e-4, verbose=False):
         self.learning_rate = learning_rate
         self.n_iterations = n_iterations
@@ -102,6 +105,7 @@ class NumpyLogisticRegressionGD:
         self.verbose = verbose
         self.theta = None
         self.cost_history = []
+        self.test_cost_history = []
 
     def _sigmoid(self, z: np.ndarray) -> np.ndarray:
         """
@@ -133,21 +137,14 @@ class NumpyLogisticRegressionGD:
         cost = -(1 / m) * np.sum(y * np.log(h + epsilon) + (1 - y) * np.log(1 - h + epsilon))
         return cost
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> 'NumpyLogisticRegressionGD':
-        """
-        Fits the logistic regression model using gradient descent.
-
-        Args:
-            X (np.ndarray): Feature matrix.
-            y (np.ndarray): Target vector.
-
-        Returns:
-            self: Fitted model.
-        """
+    def fit(self, X: np.ndarray, y: np.ndarray, X_val: np.ndarray = None,
+            y_val: np.ndarray = None) -> 'NumpyLogisticRegressionGD':
         X_b = add_bias_term(X)
         n_samples, n_features = X_b.shape
         self.theta = np.zeros(n_features)
         self.cost_history = []
+        self.test_cost_history = []
+
         prev_cost = float('inf')
 
         for iteration in range(self.n_iterations):
@@ -169,8 +166,10 @@ class NumpyLogisticRegressionGD:
             current_cost = self._compute_cost(X_b, y, self.theta)
             self.cost_history.append(current_cost)
 
-            if self.verbose and (iteration % 100 == 0 or iteration == self.n_iterations - 1):
-                logger.info(f"Iteration {iteration + 1}/{self.n_iterations}, Cost: {current_cost:.6f}")
+            if X_val is not None and y_val is not None:
+                X_val_b = add_bias_term(X_val)
+                val_cost = self._compute_cost(X_val_b, y_val, self.theta)
+                self.test_cost_history.append(val_cost)
 
             if abs(prev_cost - current_cost) < self.tol:
                 logger.info(f"Converged at iteration {iteration + 1}, Cost: {current_cost:.6f}")
@@ -225,7 +224,8 @@ def run_numpy_logistic_regression_gd(X_train: np.ndarray, y_train: np.ndarray,
     model.fit(X_train, y_train)
 
     results = {}
-    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val), ("test", X_test, y_test)]:
+    for split_name, X_split, y_split_true in [("train", X_train, y_train), ("val", X_val, y_val),
+                                              ("test", X_test, y_test)]:
         y_pred = model.predict(X_split)
         y_proba = model.predict_proba(X_split)
 
@@ -237,6 +237,7 @@ def run_numpy_logistic_regression_gd(X_train: np.ndarray, y_train: np.ndarray,
             "ROC_AUC": roc_auc_score(y_split_true, y_proba) if len(np.unique(y_split_true)) > 1 else "N/A"
         }
         results[split_name] = metrics
-        logger.info(f"Logistic Regression ({split_name}) - Accuracy: {metrics['Accuracy']:.4f}, F1: {metrics['F1']:.4f}, ROC_AUC: {metrics['ROC_AUC'] if isinstance(metrics['ROC_AUC'], float) else 'N/A'}")
+        logger.info(
+            f"Logistic Regression ({split_name}) - Accuracy: {metrics['Accuracy']:.4f}, F1: {metrics['F1']:.4f}, ROC_AUC: {metrics['ROC_AUC'] if isinstance(metrics['ROC_AUC'], float) else 'N/A'}")
 
-    return results, model.cost_history
+    return results, model.cost_history, model.test_cost_history

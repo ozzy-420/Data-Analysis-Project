@@ -1,8 +1,12 @@
+import logging
+
 import pandas as pd
 
+logger = logging.getLogger(__name__)
 
-# Function computes statistics of a data
+
 def compute_statistics(data):
+    logger.debug("Computing statistics...")
     stats = {}
 
     for column in data.columns:
@@ -23,12 +27,12 @@ def compute_statistics(data):
                 'missing_values': data[column].isna().sum(),
                 'class_proportions': data[column].value_counts(normalize=True).to_dict()
             }
-
+    logger.debug("Statistics computed")
     return stats
 
 
-# Function saves statistics to the output file
 def save_statistics(stats, output_file="data/statistics.csv"):
+    logger.debug(f"Saving statistics to {output_file}...")
     stats_df = pd.DataFrame(stats).T
     stats_df.to_csv(output_file)
-    print(f"Statystyki zapisano do {output_file}")
+    logger.info(f"Statistics saved to file {output_file}")

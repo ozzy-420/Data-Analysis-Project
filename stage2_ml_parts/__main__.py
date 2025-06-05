@@ -19,7 +19,7 @@ from stage2_ml_parts.visualizations import (
 logger = logging.getLogger(__name__)
 
 # Default paths and parameters
-DEFAULT_DATA_SOURCE = "data/UCI_Credit_Card.csv"
+DEFAULT_DATA_SOURCE = "../data/UCI_Credit_Card.csv"
 TARGET_COLUMN = 'default.payment.next.month'
 
 
@@ -115,14 +115,14 @@ def main():
         if not results_df.empty:
             plot_model_comparison_metrics(results_df, metric_key='Test Acc/MSE',
                                           title='Model Comparison (Test Accuracy/MSE)',
-                                          filename='output/stage2/model_comparison_test_acc_mse.png')
+                                          filename='../output/stage2/model_comparison_test_acc_mse.png')
             plot_model_comparison_metrics(results_df, metric_key='Test F1/R2',
                                           title='Model Comparison (Test F1/R2)',
-                                          filename='output/stage2/model_comparison_test_f1_r2.png')
+                                          filename='../output/stage2/model_comparison_test_f1_r2.png')
             if 'Test ROC_AUC' in results_df.columns and results_df['Test ROC_AUC'].notna().any():
                 plot_model_comparison_metrics(results_df, metric_key='Test ROC_AUC',
                                               title='Model Comparison (Test ROC AUC)',
-                                              filename='output/stage2/model_comparison_test_roc_auc.png')
+                                              filename='../output/stage2/model_comparison_test_roc_auc.png')
 
         pytorch_times_for_plot = {}
         if "PyTorch Logistic Regression (CPU)" in results_df["Model"].values and not pd.isna(time_cpu_pytorch):
@@ -132,11 +132,11 @@ def main():
 
         if pytorch_times_for_plot:
             plot_training_times(pytorch_times_for_plot, title="PyTorch Logistic Regression Training Times",
-                                filename="output/stage2/pytorch_training_times.png")
+                                filename="../output/stage2/pytorch_training_times.png")
 
         if cost_history_numpy_log_reg:
             plot_numpy_cost_history(cost_history_numpy_log_reg, title="NumPy Logistic Regression (GD) - Cost History",
-                                    filename="output/stage2/numpy_lr_gd_cost_history.png")
+                                    filename="../output/stage2/numpy_lr_gd_cost_history.png")
 
         if history_pytorch_cpu:
             plot_pytorch_train_val_curves(history_pytorch_cpu, model_name_suffix=" (CPU)",

@@ -1,8 +1,11 @@
+import logging
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib
 
 matplotlib.use('TkAgg')
+logger = logging.getLogger(__name__)
 
 
 def create_boxplot(data, output_file, plot_config, x=None, y=None, hue=None):
@@ -42,7 +45,6 @@ def create_heatmap(data, output_file, plot_config):
     plt.close()
 
 
-
 def create_visualizations(data, output_files, plot_config, x=None, y=None, hue=None):
     """Generates and saves all visualizations."""
     create_boxplot(data, output_files["boxplot"], plot_config, x, y, hue)
@@ -52,4 +54,4 @@ def create_visualizations(data, output_files, plot_config, x=None, y=None, hue=N
     create_regression_plot(data, output_files["regression"], plot_config, x, y, hue)
     create_heatmap(data, output_files["heatmap"], plot_config)
 
-    print("✅ All visualizations have been saved!")
+    logger.info("All visualizations have been saved!")
